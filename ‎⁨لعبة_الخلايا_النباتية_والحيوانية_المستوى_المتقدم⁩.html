@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>رحلة داخل الخلية - المستوى المتقدم</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Tahoma,Arial,sans-serif;background:linear-gradient(135deg,#eef9f0,#eef5ff);color:#17324d}
+.container{max-width:900px;margin:auto;padding:16px}
+.hero,.card{background:#fff;border:1px solid #dce7ec;border-radius:22px;box-shadow:0 7px 22px #17324d12}
+.hero{padding:25px;text-align:center;background:linear-gradient(135deg,#e8f8ea,#edf5ff)}
+.hero .emoji{font-size:48px}
+h1{font-size:31px;margin:8px 0}h2{margin:0 0 12px;font-size:22px}
+p{line-height:1.8}.card{padding:20px;margin-top:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.pill{background:#eef5f8;border-radius:13px;padding:10px;text-align:center;font-weight:bold}
+.progress{height:10px;background:#e8edf0;border-radius:99px;overflow:hidden;margin-top:12px}.bar{height:100%;width:0;background:#4d8d67;transition:.35s}
+button{width:100%;border:0;border-radius:13px;padding:13px;margin:6px 0;font-size:16px;font-weight:bold;cursor:pointer;background:#edf4f7;color:#17324d}
+button:hover{filter:brightness(.97)}button:disabled{cursor:default;opacity:.92}
+.primary{background:#17324d!important;color:#fff!important}.correct{background:#e3f6e9!important;color:#176b32!important}.wrong{background:#fff0f0!important;color:#a32227!important}
+.hidden{display:none}.feedback{padding:13px;border-radius:12px;font-weight:bold;margin-top:10px}
+.question-num{font-size:14px;color:#637887;margin-bottom:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cell{height:210px;position:relative;overflow:hidden}
+.plant{border:8px solid #4f8e4a;border-radius:30% 36% 34% 30%;background:#eff9e9}
+.animal{border:5px solid #d87d65;border-radius:48% 52% 46% 55%;background:#fff1eb}
+.org{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;font-weight:bold}
+.nucleus{width:55px;height:55px;border-radius:50%;background:#aeb8e8;left:38%;top:38%}
+.vacuole{width:78px;height:60px;border-radius:45%;background:#bde7f2;left:8%;top:18%}
+.chloroplast{width:42px;height:21px;border-radius:50%;background:#68b56b}
+.mito{width:38px;height:22px;border-radius:50%;background:#e5a080}
+.membrane{inset:8px;border:2px dashed #527a91;border-radius:inherit}
+.final{text-align:center;font-size:21px;background:#f3f8fa;border-radius:16px;padding:20px;font-weight:bold}
+.badge{display:inline-block;background:#17324d;color:#fff;border-radius:999px;padding:5px 10px;font-size:13px}
+.note{font-size:14px;color:#617482}
+@media(max-width:650px){.stats{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+<div class="emoji">🔬🧬🌱🐾</div>
+<h1>رحلة داخل الخلية — المستوى المتقدم</h1>
+<p>تحدٍ علمي من <b>12 سؤالًا</b> يبدأ بالتمييز بين التراكيب وينتهي بأسئلة استنتاج وتطبيق.</p>
+<span class="badge">علوم • الخلايا النباتية والحيوانية</span>
+</div>
+
+<div class="card">
+<div class="stats">
+<div class="pill">⭐ النقاط<br><span id="score">0</span></div>
+<div class="pill">❤️ المحاولات<br><span id="lives">3</span></div>
+<div class="pill">🧠 المستوى<br><span id="level">1</span></div>
+<div class="pill">📊 السؤال<br><span id="qnum">0 / 12</span></div>
+</div>
+<div class="progress"><div id="bar" class="bar"></div></div>
+</div>
+
+<section id="intro" class="card">
+<h2>🎯 كيف تلعب؟</h2>
+<p>أجب عن الأسئلة. الأسئلة السهلة تمنحك 10 نقاط، والمتوسطة 15، والصعبة 20. لديك 3 محاولات فقط. إذا أخطأت، سيظهر تفسير مختصر لتتعلم من الخطأ.</p>
+<button id="start" class="primary">ابدأ التحدي 🚀</button>
+</section>
+
+<section id="game" class="card hidden">
+<div class="question-num" id="difficulty"></div>
+<h2 id="question"></h2>
+<div id="visual" class="hidden"></div>
+<div id="answers"></div>
+<div id="feedback"></div>
+<button id="next" class="primary hidden">السؤال التالي ➡️</button>
+</section>
+
+<section id="result" class="card hidden">
+<div class="final" id="resultText"></div>
+<div id="review" style="margin-top:14px"></div>
+<button id="restart" class="primary">🔄 إعادة التحدي</button>
+</section>
+
+</div>
+
+<script>
+const questions=[
+{d:'سهل',p:10,q:'أي تركيب يوجد في كل من الخلية النباتية والخلية الحيوانية؟',a:['الجدار الخلوي','البلاستيدات الخضراء','الغشاء البلازمي','الفجوة العصارية الكبيرة'],c:2,e:'الغشاء البلازمي يحيط بالخلايا النباتية والحيوانية وينظم مرور المواد إليها ومنها.'},
+{d:'سهل',p:10,q:'ما التركيب الذي يعطي الخلية النباتية دعمًا وشكلًا أكثر ثباتًا؟',a:['الجدار الخلوي','النواة','الميتوكندريا','الريبوسومات'],c:0,e:'الجدار الخلوي تركيب داعم يوجد خارج الغشاء البلازمي في الخلية النباتية.'},
+{d:'سهل',p:10,q:'أي تركيب مسؤول عن القيام بعملية البناء الضوئي في الخلية النباتية؟',a:['النواة','البلاستيدات الخضراء','الميتوكندريا','السيتوبلازم'],c:1,e:'تحتوي البلاستيدات الخضراء على تراكيب تساعد النبات على تحويل الطاقة الضوئية إلى طاقة كيميائية.'},
+{d:'متوسط',p:15,q:'لماذا تبدو الفجوة العصارية في الخلية النباتية عادةً أكبر من الفجوات في الخلية الحيوانية؟',a:['لأن النبات لا يحتوي على غشاء بلازمي','لأنها تخزن الماء ومواد أخرى وتساعد في المحافظة على ضغط الخلية','لأنها تنتج الضوء','لأنها تحتوي على المادة الوراثية'],c:1,e:'الفجوة الكبيرة تساعد الخلية النباتية في تخزين الماء والمواد وتساهم في المحافظة على ضغط الامتلاء.'},
+{d:'متوسط',p:15,q:'إذا فقدت خلية نباتية البلاستيدات الخضراء، فما العملية التي ستتأثر مباشرة؟',a:['البناء الضوئي','انقسام النواة','مرور الماء عبر الغشاء','نسخ المادة الوراثية'],c:0,e:'البلاستيدات الخضراء هي الموقع الرئيس للبناء الضوئي في الخلايا النباتية الخضراء.'},
+{d:'متوسط',p:15,q:'أي عبارة تقارن بين الميتوكندريا والبلاستيدات الخضراء بشكل صحيح؟',a:['كلاهما يوجد فقط في الخلايا الحيوانية','الميتوكندريا مرتبطة بإطلاق الطاقة من الغذاء، والبلاستيدات الخضراء مرتبطة بالبناء الضوئي','كلاهما مسؤول عن تخزين الماء','البلاستيدات الخضراء تتحكم في أنشطة الخلية'],c:1,e:'الميتوكندريا مرتبطة بتحرير الطاقة من الغذاء، بينما البلاستيدات الخضراء تقوم بدور أساسي في البناء الضوئي.'},
+{d:'متوسط',p:15,q:'أي ترتيب يصف موقع الجدار الخلوي بالنسبة للغشاء البلازمي في الخلية النباتية؟',a:['الجدار الخلوي داخل النواة','الغشاء البلازمي خارج الجدار الخلوي دائمًا','الجدار الخلوي خارج الغشاء البلازمي','لا توجد علاقة بينهما'],c:2,e:'في الخلية النباتية يوجد الجدار الخلوي خارج الغشاء البلازمي.'},
+{d:'صعب',p:20,q:'وُضعت خلية تحت المجهر، فظهرت ذات شكل منتظم، وبها جدار خلوي وبلاستيدات خضراء وفجوة كبيرة. ما الاستنتاج الأكثر دقة؟',a:['هي خلية حيوانية','هي خلية نباتية غالبًا','هي خلية عصبية','لا يمكن معرفة نوعها من هذه التراكيب'],c:1,e:'اجتماع الجدار الخلوي والبلاستيدات الخضراء والفجوة الكبيرة من العلامات المميزة للخلية النباتية.'},
+{d:'صعب',p:20,q:'إذا تعطلت النواة في خلية نباتية، فما النتيجة المتوقعة؟',a:['تتوقف جميع المواد عن دخول الخلية فورًا','تتأثر قدرة الخلية على تنظيم أنشطتها والتحكم في معلوماتها الوراثية','تتحول الخلية إلى خلية حيوانية','تبدأ الخلية بإنتاج المزيد من البلاستيدات فورًا'],c:1,e:'النواة تحتوي على المادة الوراثية وتشارك في تنظيم أنشطة الخلية.'},
+{d:'صعب',p:20,q:'طالب قال: «الخلية النباتية فقط تحتوي على غشاء بلازمي». ما تقييم العبارة؟',a:['صحيحة','خاطئة؛ كلا الخليتين تحتويان على غشاء بلازمي','صحيحة إذا كانت الخلية كبيرة','لا يمكن تحديد ذلك'],c:1,e:'الغشاء البلازمي يوجد في الخلايا النباتية والحيوانية.'},
+{d:'صعب',p:20,q:'إذا كان تركيب ما موجودًا في الخلية النباتية والحيوانية، لكنه لا يوجد في خلية نباتية أخرى بعد فقدان نواتها، فما التركيب الذي يتناسب أكثر مع الوصف؟',a:['النواة','الجدار الخلوي','البلاستيدات الخضراء','الفجوة'],c:0,e:'النواة هي التي تحتوي على معظم المادة الوراثية وتؤدي دورًا أساسيًا في تنظيم أنشطة الخلية.'},
+{d:'صعب',p:20,q:'أي مجموعة تمثل تراكيب يمكن أن تشترك فيها الخلية النباتية والحيوانية؟',a:['الجدار الخلوي + البلاستيدات + النواة','الغشاء البلازمي + السيتوبلازم + النواة','البلاستيدات + الجدار الخلوي + الفجوة الكبيرة فقط','الجدار الخلوي + البلاستيدات فقط'],c:1,e:'من التراكيب المشتركة الأساسية: الغشاء البلازمي والسيتوبلازم والنواة، مع وجود تراكيب مميزة للنبات مثل الجدار والبلاستيدات.'}
+];
+
+let idx=0,score=0,lives=3,locked=false,history=[];
+const $=id=>document.getElementById(id);
+function update(){
+ $('score').textContent=score;
+ $('lives').textContent=lives;
+ $('qnum').textContent=(idx+1)+' / '+questions.length;
+ $('bar').style.width=((idx)/questions.length*100)+'%';
+ $('level').textContent=idx<3?'1':idx<7?'2':'3';
+}
+function render(){
+ locked=false;
+ const x=questions[idx];
+ $('difficulty').innerHTML='<span class="badge">'+x.d+' • '+x.p+' نقطة</span>';
+ $('question').textContent=x.q;
+ $('feedback').innerHTML='';
+ $('next').classList.add('hidden');
+ const box=$('answers');box.innerHTML='';
+ x.a.forEach((ans,i)=>{
+   const b=document.createElement('button');
+   b.textContent=ans;
+   b.onclick=()=>answer(i,b);
+   box.appendChild(b);
+ });
+ update();
+}
+function answer(choice,btn){
+ if(locked)return;
+ locked=true;
+ const x=questions[idx], buttons=[...$('answers').querySelectorAll('button')];
+ buttons.forEach(b=>b.disabled=true);
+ const ok=choice===x.c;
+ if(ok){
+   btn.classList.add('correct');
+   score+=x.p;
+   $('feedback').innerHTML='<div class="feedback correct">✅ إجابة صحيحة! +'+x.p+' نقطة<br><span class="note">'+x.e+'</span></div>';
+ }else{
+   btn.classList.add('wrong');
+   buttons[x.c].classList.add('correct');
+   lives--;
+   $('feedback').innerHTML='<div class="feedback wrong">❌ إجابة غير صحيحة.<br><span class="note">'+x.e+'</span></div>';
+ }
+ history.push({q:x.q,ok});
+ update();
+ $('next').classList.remove('hidden');
+}
+$('start').onclick=()=>{ $('intro').classList.add('hidden');$('game').classList.remove('hidden');idx=0;score=0;lives=3;history=[];render(); };
+$('next').onclick=()=>{
+ if(lives<=0 || idx>=questions.length-1){finish();return}
+ idx++;render();
+};
+function finish(){
+ $('game').classList.add('hidden');
+ $('result').classList.remove('hidden');
+ $('bar').style.width='100%';
+ const correct=history.filter(x=>x.ok).length;
+ let title=score>=190?'🏆 عالم الخلايا — أداء استثنائي!':score>=145?'🌟 ممتاز — مستوى متقدم جدًا!':score>=100?'👏 رائع — لديك فهم جيد جدًا!':'🔬 بداية جيدة — أعد التحدي وارفع نتيجتك!';
+ $('resultText').innerHTML=title+'<br><span style="font-size:16px">النتيجة: '+score+' نقطة • الإجابات الصحيحة: '+correct+' من '+questions.length+'</span>';
+ $('review').innerHTML='<h3>📋 مراجعة التحدي</h3>'+history.map((h,i)=>'<div style="padding:9px;border-bottom:1px solid #e5eaed">'+(i+1)+'. '+(h.ok?'✅':'❌')+' '+h.q+'</div>').join('');
+}
+$('restart').onclick=()=>location.reload();
+</script>
+</body>
+</html>
